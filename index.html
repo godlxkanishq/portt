@@ -1366,10 +1366,11 @@
       const heroBox = document.querySelector('.hero');
       const cv = document.createElement('canvas');
       cv.id = 'wgl';
-      const gl = cv.getContext('webgl', {alpha:true, premultipliedAlpha:false, antialias:false});
+      const gl = cv.getContext('webgl', {alpha:true, premultipliedAlpha:false, antialias:true});
       if (gl && h1) {
         heroBox.appendChild(cv);
-        const DPR = Math.min(devicePixelRatio || 1, 1.5);
+        const DPR = Math.min(devicePixelRatio || 1, 2);
+        const SS = 2;  // supersampled text texture = smooth edges
         const PAD = 60;
         let W, H;
         const tex2d = document.createElement('canvas');
@@ -1380,10 +1381,10 @@
           cv.style.width = W + 'px'; cv.style.height = H + 'px';
           cv.style.left = (h1.offsetLeft - PAD) + 'px';
           cv.style.top = (h1.offsetTop - PAD) + 'px';
-          tex2d.width = W * DPR; tex2d.height = H * DPR;
+          tex2d.width = W * DPR * SS; tex2d.height = H * DPR * SS;
           const c = tex2d.getContext('2d');
           const cs = getComputedStyle(h1);
-          c.scale(DPR, DPR);
+          c.scale(DPR * SS, DPR * SS);
           c.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
           try { c.letterSpacing = cs.letterSpacing; } catch(e) {}
           c.textBaseline = 'middle';
@@ -1397,13 +1398,13 @@
         const fs = 'precision highp float;uniform sampler2D t;uniform float u_time,u_vel;uniform vec2 u_mouse,u_res;varying vec2 v;' +
           'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}' +
           'void main(){vec2 uv=v;vec2 d=uv-u_mouse;float dist=length(d*vec2(u_res.x/u_res.y,1.));' +
-          'float rip=exp(-dist*dist*7.)*(.012+u_vel*.06);' +
+          'float rip=exp(-dist*dist*7.)*(.007+u_vel*.06);' +
           'uv+=normalize(d+1e-4)*rip*sin(u_time*5.-dist*20.);' +
-          'uv.y+=sin(uv.x*7.+u_time*1.3)*.003;' +
-          'float ab=.0013+u_vel*.005;' +
+          'uv.y+=sin(uv.x*6.+u_time*.9)*.0012;' +
+          'float ab=u_vel*.006;' +
           'float r=texture2D(t,uv+vec2(ab,0.)).r;vec4 c=texture2D(t,uv);float b=texture2D(t,uv-vec2(ab,0.)).b;' +
           'vec3 col=vec3(r,c.g,b);' +
-          'col+=(hash(uv*u_res+fract(u_time)*7.)*.06-.03)*c.a;' +
+          'col+=(hash(uv*u_res+fract(u_time)*7.)*.022-.011)*c.a*c.a;' +
           'gl_FragColor=vec4(col,c.a);}';
         const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
         const prog = gl.createProgram();

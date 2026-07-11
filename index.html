@@ -36,9 +36,8 @@
   .b3{width:52vw;height:52vw;right:-14vw;bottom:-30vh;background:radial-gradient(circle,rgba(194,102,31,.16),transparent 65%);animation:drift1 40s ease-in-out infinite alternate-reverse}
   @keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(-6vw,5vh) scale(1.12)}}
   @keyframes drift2{from{transform:translate(0,0) scale(1)}to{transform:translate(4vw,-6vh) scale(1.08)}}
-  .cursorglow{position:fixed;left:0;top:0;width:1120px;height:1120px;margin:-560px 0 0 -560px;border-radius:50%;
-    pointer-events:none;z-index:1;will-change:translate;translate:70vw 30vh;
-    background:radial-gradient(circle,rgba(255,176,0,.06),transparent 62%)}
+  .cursorglow{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.75;
+    background:radial-gradient(560px circle at var(--mx,70%) var(--my,30%),rgba(255,176,0,.075),transparent 62%)}
   .grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 
@@ -444,7 +443,7 @@
   .client.more p{color:var(--faint);font-size:13.5px;max-width:30ch}
 
   /* ---------- showtime pass ---------- */
-  #prog{position:fixed;top:0;left:0;height:3px;z-index:210;width:100%;transform:scaleX(0);transform-origin:0 50%;
+  #prog{position:fixed;top:0;left:0;height:3px;z-index:210;width:0;
     background:linear-gradient(90deg,var(--ember),var(--amber),var(--amber2));
     box-shadow:0 0 14px rgba(255,176,0,.7)}
   #intro{position:fixed;inset:0;z-index:220;background:#070604;display:flex;align-items:center;justify-content:center;
@@ -502,19 +501,6 @@
   .rv.in h2 .l i{translate:0 0;rotate:0deg}
   .svc .dot{animation:dotpulse 2.6s ease-in-out infinite}
   @keyframes dotpulse{0%,100%{box-shadow:0 0 10px rgba(255,176,0,.5)}50%{box-shadow:0 0 22px rgba(255,176,0,.95)}}
-
-  /* ---------- perf pass: fewer live blurs, skipped offscreen rendering ---------- */
-  section{content-visibility:auto;contain-intrinsic-size:1px 900px}
-  .skill,.svc,.xcard,.soon,.status,.btn-ghost,.sbtn,.soc,.marquee{
-    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(23,19,13,.58)}
-  .chip{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(255,255,255,.05)}
-  .marquee{background:rgba(20,16,11,.5)}
-  nav{backdrop-filter:blur(14px) saturate(1.7);-webkit-backdrop-filter:blur(14px) saturate(1.7)}
-  .tile,.card,.flag,.client,.contact{backdrop-filter:blur(12px) saturate(1.7);-webkit-backdrop-filter:blur(12px) saturate(1.7)}
-  .cs-panel{backdrop-filter:blur(16px) saturate(1.6);-webkit-backdrop-filter:blur(16px) saturate(1.6)}
-  .lightfield .blob{will-change:transform}
-  .hero{will-change:transform,opacity}
-  .marquee .track{will-change:transform,translate}
 </style>
 
 <div class="stage">
@@ -886,7 +872,8 @@
   const ics = orbit ? [...orbit.querySelectorAll('.ic')] : [];
   const reduceMo = matchMedia('(prefers-reduced-motion:reduce)').matches;
   addEventListener('pointermove', e => {
-    glow.style.translate = e.clientX + 'px ' + e.clientY + 'px';
+    glow.style.setProperty('--mx', e.clientX + 'px');
+    glow.style.setProperty('--my', e.clientY + 'px');
     if (reduceMo || !ics.length) return;
     const nx = (e.clientX / innerWidth - .5), ny = (e.clientY / innerHeight - .5);
     ics.forEach(ic => {
@@ -950,7 +937,7 @@
   if (dust && !reduceMo) {
     const ctx = dust.getContext('2d');
     let W, H;
-    const dpr = 1;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
     const resize = () => {
       W = dust.width = innerWidth * dpr;
       H = dust.height = innerHeight * dpr;
@@ -1000,7 +987,7 @@
   const prog = document.getElementById('prog');
   const setProg = () => {
     const h = document.documentElement;
-    prog.style.transform = 'scaleX(' + (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)).toFixed(4) + ')';
+    prog.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
   };
   addEventListener('scroll', setProg, {passive:true}); setProg();
 
@@ -1015,10 +1002,8 @@
       ring.classList.toggle('hot', !!hot);
     }, {passive:true});
     (function ringTick(){
-      if (Math.abs(cx - rx) > .2 || Math.abs(cy - ry) > .2) {
-        rx += (cx - rx) * .16; ry += (cy - ry) * .16;
-        ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-      }
+      rx += (cx - rx) * .16; ry += (cy - ry) * .16;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
       requestAnimationFrame(ringTick);
     })();
   }
@@ -1095,7 +1080,7 @@
   if (!reduceMo && matchMedia('(pointer:fine)').matches) {
     const de = document.documentElement;
     de.style.scrollBehavior = 'auto';
-    let target = scrollY, cur = scrollY, vel = 0, dirty = true;
+    let target = scrollY, cur = scrollY, vel = 0;
     const maxScroll = () => de.scrollHeight - innerHeight;
     addEventListener('wheel', e => {
       if (e.ctrlKey || document.body.style.overflow === 'hidden' || e.target.closest('.cs-panel')) return;
@@ -1104,7 +1089,7 @@
       target = Math.max(0, Math.min(maxScroll(), target + d));
     }, {passive:false});
     addEventListener('scroll', () => {
-      if (Math.abs(scrollY - cur) > 1.5) { cur = target = scrollY; dirty = true; }  // scrollbar / keyboard / touch
+      if (Math.abs(scrollY - cur) > 1.5) { cur = target = scrollY; }  // scrollbar / keyboard / touch
     }, {passive:true});
     document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
       const id = a.getAttribute('href'); if (id.length < 2) return;
@@ -1119,14 +1104,11 @@
       cur += vel * .09;
       if (Math.abs(vel) < .4) { cur = target; vel = 0; }
       if (Math.abs(scrollY - cur) >= .5) scrollTo(0, cur);
-      if (Math.abs(vel) > .05 || dirty) {
-        dirty = Math.abs(vel) > .05;
-        if (hero) {
-          hero.style.translate = '0 ' + (cur * .16).toFixed(1) + 'px';
-          hero.style.opacity = Math.max(0, 1 - cur / (innerHeight * .92)).toFixed(3);
-        }
-        if (mqTrack) mqTrack.style.transform = 'skewX(' + Math.max(-7, Math.min(7, vel * .045)).toFixed(2) + 'deg)';
+      if (hero) {
+        hero.style.translate = '0 ' + (cur * .16).toFixed(1) + 'px';
+        hero.style.opacity = Math.max(0, 1 - cur / (innerHeight * .92)).toFixed(3);
       }
+      if (mqTrack) mqTrack.style.transform = 'skewX(' + Math.max(-7, Math.min(7, vel * .045)).toFixed(2) + 'deg)';
       requestAnimationFrame(glide);
     })();
   }

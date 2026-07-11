@@ -492,6 +492,15 @@
     .cur-ring.hot{width:70px;height:70px;border-color:rgba(255,222,150,.85);background:rgba(255,176,0,.07)}
   }
   @media(pointer:coarse),(prefers-reduced-motion:reduce){.cur-dot,.cur-ring{display:none}}
+
+  /* ---------- scroll choreography ---------- */
+  h2 .l{display:block;overflow:hidden}
+  h2 .l i{display:block;font-style:normal;translate:0 112%;rotate:2.5deg;
+    transition:translate .95s cubic-bezier(.22,1,.36,1),rotate .95s cubic-bezier(.22,1,.36,1)}
+  h2 .l:nth-child(2) i{transition-delay:.12s}
+  .rv.in h2 .l i{translate:0 0;rotate:0deg}
+  .svc .dot{animation:dotpulse 2.6s ease-in-out infinite}
+  @keyframes dotpulse{0%,100%{box-shadow:0 0 10px rgba(255,176,0,.5)}50%{box-shadow:0 0 22px rgba(255,176,0,.95)}}
 </style>
 
 <div class="stage">
@@ -875,8 +884,8 @@
 
   // staggered reveals
   const io = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-  }), {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+    e.target.classList.toggle('in', e.isIntersecting);   // replay on every pass
+  }), {threshold:.1, rootMargin:'0px 0px -5% 0px'});
   document.querySelectorAll('.rv').forEach((el,i) => {
     if (!el.style.transitionDelay) el.style.transitionDelay = (i % 6) * .06 + 's';
     io.observe(el);
@@ -1103,4 +1112,18 @@
       requestAnimationFrame(glide);
     })();
   }
+
+  // split section headings into masked lines that slide up per-line
+  document.querySelectorAll('.sec-head h2, .contact h2').forEach(h => {
+    h.innerHTML = h.innerHTML.split('<br />').map(seg =>
+      '<span class="l"><i>' + seg + '</i></span>').join('');
+  });
+
+  // wave cascade inside every grid — cards enter one after another
+  document.querySelectorAll('.skills,.svcs,.clients,.grid2,.xp,.socials').forEach(grid => {
+    [...grid.children].forEach((el, i) => {
+      const t = el.classList.contains('rv') ? el : el.querySelector(':scope > .rv');
+      if (el.classList.contains('rv')) el.style.transitionDelay = Math.min(i, 11) * .07 + 's';
+    });
+  });
 </script>

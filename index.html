@@ -836,6 +836,18 @@
   :root.light .cmdk input{border-bottom:1px solid rgba(24,16,4,.12)}
   :root.light .cs-panel{background:linear-gradient(160deg,rgba(250,246,238,.88),rgba(240,235,226,.92))}
   :root.light .cur-ring::after{color:#fff}
+
+  /* ---------- v2 · mobile hardening ---------- */
+  @media(max-width:760px){
+    .ghost{display:none}
+    h2{font-size:clamp(34px,9.5vw,46px)}
+    .eyebrow{letter-spacing:.18em;font-size:11.5px}
+    .rv{filter:none;translate:0 40px}
+    .metric b{font-size:clamp(38px,12vw,56px)}
+    .metrics{gap:26px}
+    .metric p{font-size:12.5px}
+    .cinebar{height:7vh}
+  }
 </style>
 </head>
 <body>
@@ -1877,8 +1889,9 @@
       }));
     }
 
-    // --- 2. hero cinematic exit, scrubbed to scroll instead of a lerp loop ---
-    gsap.to('.hero', {
+    // --- 2. hero cinematic exit, scrubbed to scroll (desktop only: on mobile the
+    //        translate/fade fights the compact layout) ---
+    if (matchMedia('(min-width: 761px)').matches) gsap.to('.hero', {
       y: () => innerHeight * .18, opacity: 0, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 30%', scrub: true, invalidateOnRefresh: true }
     });
@@ -1957,8 +1970,9 @@
       return () => { rail.classList.remove('rail'); tween.scrollTrigger && tween.scrollTrigger.kill(); tween.kill(); };
     });
 
-    // --- 10. section headings drift a touch slower than the page (depth) ---
-    gsap.utils.toArray('section .sec-head').forEach(head => {
+    // --- 10. section headings drift a touch slower than the page (desktop only:
+    //         the offset overlaps content in tight mobile spacing) ---
+    if (matchMedia('(min-width: 761px)').matches) gsap.utils.toArray('section .sec-head').forEach(head => {
       gsap.fromTo(head, { y: 34 }, {
         y: -34, ease: 'none',
         scrollTrigger: { trigger: head, start: 'top bottom', end: 'bottom top', scrub: true }

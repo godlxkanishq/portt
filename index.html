@@ -536,10 +536,6 @@
   @keyframes introPop{from{opacity:0;scale:.7;filter:blur(14px)}to{opacity:1;scale:1;filter:blur(0)}}
   @keyframes introLine{from{width:0}to{width:240px}}
   @keyframes introFade{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
-  #intro .pct{position:absolute;right:clamp(24px,5vw,64px);bottom:clamp(18px,4vw,44px);font-family:var(--mono);
-    font-size:clamp(44px,7vw,92px);font-weight:200;letter-spacing:-.04em;color:rgba(255,246,230,.92);
-    font-variant-numeric:tabular-nums;animation:introFade .6s .1s both}
-  #intro .pct i{font-style:normal;font-size:.38em;color:var(--amber);letter-spacing:.14em}
   body.noscroll{overflow:hidden}
   @media(prefers-reduced-motion:reduce){#intro{display:none}}
 
@@ -868,7 +864,6 @@
     <div class="mono">K.</div>
     <div class="line"></div>
     <div class="tag">Kanishq — Portfolio</div>
-    <div class="pct">0<i>%</i></div>
   </div>
 
 
@@ -1366,24 +1361,16 @@
   }
 
   // ---------- showtime ----------
-  // cinematic intro — v2: eased load counter, then lift
+  // cinematic intro
   const intro = document.getElementById('intro');
   if (reduceMo) { intro.remove(); }
   else {
     document.body.classList.add('noscroll');
-    const pct = intro.querySelector('.pct');
-    const t0 = performance.now(), DUR = 1500;
-    (function count(now){
-      const p = Math.min(1, (now - t0) / DUR);
-      const e = 1 - Math.pow(1 - p, 3);
-      if (pct) pct.innerHTML = Math.round(e * 100) + '<i>%</i>';
-      if (p < 1) requestAnimationFrame(count);
-      else setTimeout(() => {
-        intro.classList.add('lift');
-        document.body.classList.remove('noscroll');
-        setTimeout(() => intro.remove(), 1000);
-      }, 180);
-    })(t0);
+    setTimeout(() => {
+      intro.classList.add('lift');
+      document.body.classList.remove('noscroll');
+      setTimeout(() => intro.remove(), 1000);
+    }, 1500);
   }
 
   // scroll progress
